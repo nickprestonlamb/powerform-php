@@ -1,0 +1,16 @@
+{
+	"name": "wrpn/powerform-php",
+	"require": {
+		"php": ">=5.4.0",
+		"lib-curl": ">=7.29",
+		"ext-json": "*",
+		"ext-mbstring": "*"
+	},
+	"autoload": {
+		"psr-4": {
+			"WRPN\\Web\\": ""
+		}, 
+		"exclude-from-classmap": ["/tests/"]
+	}
+    }
+}
