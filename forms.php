@@ -357,6 +357,14 @@ class forms
 		$i = 0;
 		$cursorkey = $this->name . '_' . $name_stripped;
 		
+		// Handle new HTML5 types but assume they are text-like fields
+		$type_real = $type;
+		$html5textlike = ['color', 'date', 'datetime-local', 'email', 'month', 'number', 'range', 'search', 'tel', 'time', 'url', 'week'];
+		if(in_array($type, $html5textlike, true))
+		{
+			$type = 'text';
+		}
+		
 		if(preg_match('/(.+)\[([^\]]*)\]$/', $name, $m))
 		{
 			// handle elements with a key given in HTML array name
@@ -416,17 +424,17 @@ class forms
 		// var_dump($type, $name, $options, $_POST[$name], $value, $param['value'], $this->values[$name]);
 		
 		$html = '<';
-		if($type == 'text' || $type == 'radio' || $type == 'checkbox' || $type == 'hidden' || $type == 'password' || $type == 'button' || $type == 'submit' || $type == 'file')
-		{
-			$html .= 'input type="' . $type . '"';
-		}
-		else if($type == 'select')
+		if($type == 'select')
 		{
 			$html .= 'select';
 		}
 		else if($type == 'textarea')
 		{
 			$html .= 'textarea';
+		}
+		else
+		{
+			$html .= 'input type="' . $type_real . '"';
 		}
 		$html .= ' name="'. $name . '"' . (strlen((string)$id) ? ' id="' . (string)$id . '"' : '');
 		
