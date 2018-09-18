@@ -4,6 +4,8 @@ namespace WRPN\Web;
 
 class forms
 {
+	use GeographyLists;
+
 	/* Variables */
 	var $name = '';
 	var $start_count = 0;
@@ -180,8 +182,11 @@ class forms
 		
 		if(is_object($resp) && isset($resp->success) && $resp->success === true)
 		{
-			if(isset($_SESSION['__post'])) $_POST = $_SESSION['__post'];
-			unset($_SESSION['__post']);
+			if(isset($_SESSION['__post']))
+			{
+				$_POST = $_SESSION['__post'];
+				unset($_SESSION['__post']);
+			}
 			$this->captcha_step_done = TRUE;
 			$this->step = 'ready';
 		}
@@ -688,80 +693,6 @@ class forms
 		return (filter_var($url, FILTER_VALIDATE_URL) !== FALSE);
 	}
 	
-	/* Some widely-used arrays */
-	
-	/* List of US States */
-	var $state_list = array(
-	'AL'=>'Alabama',
-	'AK'=>'Alaska', 
-	'AZ'=>'Arizona', 
-	'AR'=>'Arkansas', 
-	'CA'=>'California', 
-	'CO'=>'Colorado', 
-	'CT'=>'Connecticut', 
-	'DE'=>'Delaware', 
-	'DC'=>'District of Columbia', 
-	'FL'=>'Florida', 
-	'GA'=>'Georgia', 
-	'HI'=>'Hawaii', 
-	'ID'=>'Idaho', 
-	'IL'=>'Illinois', 
-	'IN'=>'Indiana', 
-	'IA'=>'Iowa', 
-	'KS'=>'Kansas', 
-	'KY'=>'Kentucky', 
-	'LA'=>'Louisiana', 
-	'ME'=>'Maine', 
-	'MD'=>'Maryland', 
-	'MA'=>'Massachusetts', 
-	'MI'=>'Michigan', 
-	'MN'=>'Minnesota', 
-	'MS'=>'Mississippi', 
-	'MO'=>'Missouri', 
-	'MT'=>'Montana',
-	'NE'=>'Nebraska',
-	'NV'=>'Nevada',
-	'NH'=>'New Hampshire',
-	'NJ'=>'New Jersey',
-	'NM'=>'New Mexico',
-	'NY'=>'New York',
-	'NC'=>'North Carolina',
-	'ND'=>'North Dakota',
-	'OH'=>'Ohio', 
-	'OK'=>'Oklahoma', 
-	'OR'=>'Oregon', 
-	'PA'=>'Pennsylvania', 
-	'RI'=>'Rhode Island', 
-	'SC'=>'South Carolina', 
-	'SD'=>'South Dakota',
-	'TN'=>'Tennessee', 
-	'TX'=>'Texas', 
-	'UT'=>'Utah', 
-	'VT'=>'Vermont', 
-	'VA'=>'Virginia', 
-	'WA'=>'Washington', 
-	'WV'=>'West Virginia', 
-	'WI'=>'Wisconsin', 
-	'WY'=>'Wyoming'
-	);
-	
-	/* List of Canadian Provinces */
-	var $ca_province_list = array(
-	'AB' => 'Alberta',
-	'BC' => 'British Columbia',
-	'MB' => 'Manitoba',
-	'NB' => 'New Brunswick',
-	'NL' => 'Newfoundland and Labrador',
-	'NT' => 'Northwest Territories',
-	'NS' => 'Nova Scotia',
-	'NU' => 'Nunavut',
-	'ON' => 'Ontario',
-	'PE' => 'Prince Edward Island',
-	'QC' => 'Quebec',
-	'SK' => 'Saskatchewan',
-	'YT' => 'Yukon'
-	);
-	
 	function get_state_array($default_title = '')
 	{
 		return array_merge(array('' => $default_title), $this->state_list);
@@ -774,6 +705,14 @@ class forms
 			'United States' => $this->state_list,
 			'Canada' => $this->ca_province_list
 		);
+	}
+
+	function get_country_array($default_title = '', $show_native = true)
+	{
+		return array_merge(array('' => $default_title), 
+		array_map(function($el) use ($show_native) {
+			return $el['name'] . ($show_native && $el['native'] !== '' ? ' (' . $el['native'] . ')' : '');
+		}, $this->country_list));
 	}
 
 }
