@@ -389,7 +389,7 @@ class forms
 		/* Only text, textarea, and select fields can have their values changed by the user. Other field types are 
 		either blank ("password") or will use their original set values ("radio", "checkbox") but be selected by the user */
 		 /* For HTML pages with multiple forms, use __form_name to make sure we only set variables for the correct form section */
-		if($this->form_submitted() && isset($_POST[$name_stripped]) && ($type == 'text' || $type == 'textarea' || $type == 'select'))
+		if($this->form_submitted() && isset($_POST[$name_stripped]) && ($type == 'text' || $type == 'textarea' || $type == 'select' || type == 'hidden'))
 		{
 			if(is_array($_POST[$name_stripped]))
 			{
@@ -401,7 +401,7 @@ class forms
 			}
 			else
 			{
-				$value = htmlentities($_POST[$name]);
+				$value = $_POST[$name_stripped];
 			}
 		}
 		/* Use values set in the script before the form is processed (e.g. from a database query)
@@ -539,12 +539,30 @@ class forms
 			{	
 				foreach($options as $key => $option_value)
 				{
-					$html .= '<option value="' . htmlspecialchars($key) . '"';
-					if($value == $key)
+					if(is_array($option_value))
 					{
-						$html .= ' selected="selected"';
+						// Handle optgroups
+						echo '<optgroup label="' . htmlspecialchars($key) . '">' . "\n";
+						foreach($option_value as $og_key => $og_option_value)
+						{
+							$html .= '<option value="' . htmlspecialchars($og_key) . '"';
+							if($value == $og_key)
+							{
+								$html .= ' selected="selected"';
+							}
+							$html .= '>' . htmlspecialchars($og_option_value) . "</option>\n";
+						}
+						echo "</optgroup>\n";
 					}
-					$html .= '>' . htmlspecialchars($option_value) . "</option>\n";
+					else
+					{
+						$html .= '<option value="' . htmlspecialchars($key) . '"';
+						if($value == $key)
+						{
+							$html .= ' selected="selected"';
+						}
+						$html .= '>' . htmlspecialchars($option_value) . "</option>\n";
+					}
 				}
 			}
 			$html .= "</select>\n";
@@ -702,6 +720,7 @@ class forms
 	{
 		return array(
 			'' => $default_title, 
+			'None' => 'None',
 			'United States' => $this->state_list,
 			'Canada' => $this->ca_province_list
 		);
