@@ -389,7 +389,7 @@ class forms
 		/* Only text, textarea, and select fields can have their values changed by the user. Other field types are 
 		either blank ("password") or will use their original set values ("radio", "checkbox") but be selected by the user */
 		 /* For HTML pages with multiple forms, use __form_name to make sure we only set variables for the correct form section */
-		if($this->form_submitted() && isset($_POST[$name_stripped]) && ($type == 'text' || $type == 'textarea' || $type == 'select' || type == 'hidden'))
+		if($this->form_submitted() && isset($_POST[$name_stripped]) && ($type == 'text' || $type == 'textarea' || $type == 'select' || $type == 'hidden'))
 		{
 			if(is_array($_POST[$name_stripped]))
 			{
