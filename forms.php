@@ -71,7 +71,7 @@ class forms
 		}
 		if($this->step === 'show_form' || $this->step === 'at_form' || ( !isset($_POST['g-recaptcha-response']) && $this->has_errors ) )
 		{
-			if(isset($_SESSION)) unset($_SESSION['__post']);
+			if(isset($_SESSION['__post'])) unset($_SESSION['__post']);
 		}
 		if($captcha === TRUE && isset($_POST['g-recaptcha-response']) && !isset($_SESSION['__post']))
 		{
@@ -88,7 +88,7 @@ class forms
 		$this->errors = array();
 		$this->values = array();
 		$this->step = 'show_form';
-		unset($_POST);
+		if(isset($_SESSION['__post'])) unset($_SESSION['__post']);
 	}
 	
 	function error($id, $error)
@@ -453,7 +453,7 @@ class forms
 		if(	($type == 'radio' && $this->form_submitted() && isset($_POST[$name]) && $_POST[$name] == $value) || 
 			($type == 'radio' && ! $this->form_submitted() && isset($param['value']) && isset($this->values[$name]) && $param['value'] == $this->values[$name]) || 
 			($type == 'checkbox' && $this->form_submitted() && isset($_POST[$name_stripped]) && is_string($_POST[$name_stripped]) && $_POST[$name_stripped] == $value) || 
-			($type == 'checkbox' && $this->form_submitted() && isset($_POST[$name_stripped]) && is_array($_POST[$name_stripped]) && in_array($value, $_POST[$name_stripped])) ||
+			($type == 'checkbox' && $this->form_submitted() && isset($_POST[$name_stripped]) && is_array($_POST[$name_stripped]) && isset($_POST[$name_stripped][$i]) && $param['value'] == $_POST[$name_stripped][$i]) ||
 			($type == 'checkbox' && ! $this->form_submitted() && isset($param['value'], $this->values[$name_stripped]) && $param['value'] == $this->values[$name_stripped]) || 
 			($type == 'checkbox' && ! $this->form_submitted() && isset($param['value'], $this->values[$name_stripped]) && is_array($this->values[$name_stripped]) && isset($this->values[$name_stripped][$i])) || 
 			(isset($this->checkbox[$name_stripped]) && isset($this->checkbox[$name_stripped]['on']) && ($value == $this->checkbox[$name_stripped]['on'])) 
@@ -542,7 +542,7 @@ class forms
 					if(is_array($option_value))
 					{
 						// Handle optgroups
-						echo '<optgroup label="' . htmlspecialchars($key) . '">' . "\n";
+						$html .= '<optgroup label="' . htmlspecialchars($key) . '">' . "\n";
 						foreach($option_value as $og_key => $og_option_value)
 						{
 							$html .= '<option value="' . htmlspecialchars($og_key) . '"';
@@ -552,7 +552,7 @@ class forms
 							}
 							$html .= '>' . htmlspecialchars($og_option_value) . "</option>\n";
 						}
-						echo "</optgroup>\n";
+						$html .= "</optgroup>\n";
 					}
 					else
 					{
