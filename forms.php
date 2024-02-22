@@ -2,41 +2,40 @@
  
 namespace WRPN\Web;
 
+use Exception;
+
 class forms
 {
 	use GeographyLists;
 
 	/* Variables */
-	var $name = '';
-	var $start_count = 0;
-	var $captcha = FALSE;
-	var $captcha_step_done = FALSE;
+	private $start_count = 0;
+	private $captcha_step_done = FALSE;
 	/* Steps in the form:
 		Without CAPTCHA:	show_form, at_form, ready
 		With CAPTCHA:		show_form, at_form, show_captcha, at_captcha, ready
 	*/
-	var $step = 'show_form';
-	var $print_html = TRUE;
-	var $mode = 'default';
-	var $submitted = FALSE;
-	var $form_submitted = FALSE;
-	var $has_errors = FALSE;
-	var $errors = array();
-	var $error_ids = array();
-	var $values = array();
-	var $field_idx = array();
+	private $step = 'show_form';
+	private $mode = 'default';
+	private $submitted = FALSE;
+	private $form_submitted = FALSE;
+	private $has_errors = FALSE;
+	private $errors = [];
+	private $error_ids = [];
+	private $values = [];
+	private $field_idx = [];
+	private $checkbox = [];
 	
+	private $id;
 	/*
 	function to print a form field
 		string type, string name, array(parameters)
 	*/
 	
-	function __construct($name = 'form', $captcha = FALSE, $print_html = TRUE)
+	function __construct(private $name = 'form', private $captcha = FALSE, private $print_html = TRUE)
 	{
-		$this->name = $name;
-		$this->captcha = $captcha;
-		$this->captcha_step_done = !($captcha);
-		$this->print_html = $print_html;
+		$this->captcha_step_done = !($this->captcha);
+
 		if(isset($_REQUEST['mode']))
 		{
 			$this->mode = $_REQUEST['mode'];
@@ -85,8 +84,8 @@ class forms
 	{
 		$this->submitted = FALSE;
 		$this->has_errors = FALSE;
-		$this->errors = array();
-		$this->values = array();
+		$this->errors = [];
+		$this->values = [];
 		$this->step = 'show_form';
 		if(isset($_SESSION['__post'])) unset($_SESSION['__post']);
 	}
@@ -167,8 +166,8 @@ class forms
 		if(isset($_POST['g-recaptcha-response']))
 		{
 			$url = 'https://www.google.com/recaptcha/api/siteverify?secret='
-			. urlencode($recaptcha_private_key) . '&response='
-			. urlencode($_POST['g-recaptcha-response']) . '&remoteip='
+			. urlencode((string) $recaptcha_private_key) . '&response='
+			. urlencode((string) $_POST['g-recaptcha-response']) . '&remoteip='
 			. $_SERVER['REMOTE_ADDR'];
 			$curlinst = curl_init($url);
 			curl_setopt($curlinst, CURLOPT_USERAGENT, 'class_forms by WRPN Internet Services');
@@ -339,7 +338,7 @@ class forms
 	function show_success($msg)
 	{
 
-		if(strlen($msg) !== 0)
+		if(strlen((string) $msg) !== 0)
 		{
 			if($this->print_html === TRUE)
 			{
@@ -352,7 +351,7 @@ class forms
 		}
 	}
 	
-	function field($type, $name, $id = '', $param = array(), $options = array())
+	function field($type, $name, $id = '', $param = [], $options = [])
 	{
 		$style_done = FALSE;
 		$class_done = FALSE;
@@ -370,7 +369,7 @@ class forms
 			$type = 'text';
 		}
 		
-		if(preg_match('/(.+)\[([^\]]*)\]$/', $name, $m))
+		if(preg_match('/(.+)\[([^\]]*)\]$/', (string) $name, $m))
 		{
 			// handle elements with a key given in HTML array name
 			$name_stripped = $m[1];
@@ -443,11 +442,11 @@ class forms
 		}
 		$html .= ' name="'. $name . '"' . (strlen((string)$id) ? ' id="' . (string)$id . '"' : '');
 		
-		if(strlen($value) && ($type != 'textarea' && $type != 'password' && $type != 'select' && $type != 'file'))
+		if(strlen((string) $value) && ($type != 'textarea' && $type != 'password' && $type != 'select' && $type != 'file'))
 		{
 			/* Some form elements don't use a value parameter; others shouldn't have one for security reasons ("password", "file")
 			values for "textarea" and "select" elements are set below */
-			$html .= ' value="' . htmlspecialchars($value) . '"';
+			$html .= ' value="' . htmlspecialchars((string) $value) . '"';
 		}
 		
 		if(	($type == 'radio' && $this->form_submitted() && isset($_POST[$name]) && $_POST[$name] == $value) || 
@@ -467,7 +466,7 @@ class forms
 		if(isset($param['style']))
 		{
 			$html .= ' style="' . $param['style'];
-			if(substr($html, -1, 1) !== ';')
+			if(!str_ends_with($html, ';'))
 			{
 				$html .= ';';
 			}
@@ -493,7 +492,7 @@ class forms
 		/* Configure the class attribute, if any */
 		if(isset($param['class']))
 		{
-			$html .= ' class="' . htmlspecialchars($param['class']);
+			$html .= ' class="' . htmlspecialchars((string) $param['class']);
 			$class_done = TRUE;
 		}
 		if($this->form_submitted() && (isset($this->error_ids[$name_stripped]) || isset($this->error_ids[$name_stripped . '[' . $i . ']'])))
@@ -527,7 +526,7 @@ class forms
 				}
 				else if($attrib != 'style' && $attrib != 'width' && $attrib != 'class' && $attrib != 'checked' && $attrib != 'disabled' && $attrib != 'value')
 				{
-					$html .= ' ' . $attrib . '="'. htmlspecialchars($data) . '"';
+					$html .= ' ' . $attrib . '="'. htmlspecialchars((string) $data) . '"';
 				}
 			}
 		}
@@ -542,26 +541,26 @@ class forms
 					if(is_array($option_value))
 					{
 						// Handle optgroups
-						$html .= '<optgroup label="' . htmlspecialchars($key) . '">' . "\n";
+						$html .= '<optgroup label="' . htmlspecialchars((string) $key) . '">' . "\n";
 						foreach($option_value as $og_key => $og_option_value)
 						{
-							$html .= '<option value="' . htmlspecialchars($og_key) . '"';
+							$html .= '<option value="' . htmlspecialchars((string) $og_key) . '"';
 							if($value == $og_key)
 							{
 								$html .= ' selected="selected"';
 							}
-							$html .= '>' . htmlspecialchars($og_option_value) . "</option>\n";
+							$html .= '>' . htmlspecialchars((string) $og_option_value) . "</option>\n";
 						}
 						$html .= "</optgroup>\n";
 					}
 					else
 					{
-						$html .= '<option value="' . htmlspecialchars($key) . '"';
+						$html .= '<option value="' . htmlspecialchars((string) $key) . '"';
 						if($value == $key)
 						{
 							$html .= ' selected="selected"';
 						}
-						$html .= '>' . htmlspecialchars($option_value) . "</option>\n";
+						$html .= '>' . htmlspecialchars((string) $option_value) . "</option>\n";
 					}
 				}
 			}
@@ -569,7 +568,7 @@ class forms
 		}
 		else if($type == 'textarea')
 		{
-			$html .= '>' . htmlspecialchars($value) . '</textarea>' . "\n";
+			$html .= '>' . htmlspecialchars((string) $value) . '</textarea>' . "\n";
 		}
 		else
 		{
@@ -594,26 +593,26 @@ class forms
 		} 
 	}
 	
-	function button($label, $name = '', $id = '', $param = array())
+	function button($label, $name = '', $id = '', $param = [])
 	{
 		$param['value'] = $label;
 		return $this->field('button', $name, $id, $param);
 	}
 	
-	function submit($label, $name = 'submit_button', $id = '', $param = array())
+	function submit($label, $name = 'submit_button', $id = '', $param = [])
 	{
 		$param['value'] = $label;
 		return $this->field('submit', $name, $id, $param);
 	}
 	
-	function label($id, $label, $param = array())
+	function label($id, $label, $param = [])
 	{
 		$param_str = '';
 		if(is_array($param))
 		{
 			foreach($param as $attrib => $data)
 			{
-				$param_str .= ' ' . $attrib . '="'. htmlspecialchars($data) . '"';
+				$param_str .= ' ' . $attrib . '="'. htmlspecialchars((string) $data) . '"';
 			}
 		}
 		else
@@ -643,7 +642,7 @@ class forms
 		{
 			$form_name = $this->name;
 		}
-		$html = '<form action="' . (empty($url) ? $_SERVER['REQUEST_URI'] : $url) . '" method="'. strtolower($method) . '" id="' . $form_name . '"' . (!empty($param) ? ' ' . $param : '') . '>' . "\n" . 
+		$html = '<form action="' . (empty($url) ? $_SERVER['REQUEST_URI'] : $url) . '" method="'. strtolower((string) $method) . '" id="' . $form_name . '"' . (!empty($param) ? ' ' . $param : '') . '>' . "\n" . 
 		'<div>' . "\n" . '<input type="hidden" name="__submit" value="1" />' . "\n" . 
 		'<input type="hidden" name="__form_name" value="' . $form_name . '" />' . "\n";
 		if($this->mode !== 'default')
@@ -713,25 +712,24 @@ class forms
 	
 	function get_state_array($default_title = '')
 	{
-		return array_merge(array('' => $default_title), $this->state_list);
+		return array_merge(['' => $default_title], $this->state_list);
 	}
 	
 	function get_state_array_usca($default_title = '')
 	{
-		return array(
+		return [
 			'' => $default_title, 
 			'None' => 'None',
 			'United States' => $this->state_list,
 			'Canada' => $this->ca_province_list
-		);
+		];
 	}
 
 	function get_country_array($default_title = '', $show_native = true)
 	{
-		return array_merge(array('' => $default_title), 
-		array_map(function($el) use ($show_native) {
-			return $el['name'] . ($show_native && $el['native'] !== '' ? ' (' . $el['native'] . ')' : '');
-		}, $this->country_list));
+		return array_merge(['' => $default_title], 
+			array_map(fn($el) => $el['name'] . ($show_native && $el['native'] !== '' ? ' (' . $el['native'] . ')' : ''), $this->country_list)
+		);
 	}
 
 }
